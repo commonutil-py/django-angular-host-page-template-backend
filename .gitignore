@@ -1,0 +1,17 @@
+.DS_Store
+*.pyc
+*~
+.*.swp
+._*
+.project
+.pydevproject
+.settings
+.env
+.vscode
+build
+update.sh
+lib/__init__.py
+test/**
+rt-sandbox/**
+.rt-deps/**
+
