@@ -1,0 +1,18 @@
+autodetect: false
+uses:
+  - django
+
+ignore-paths:
+  - dist
+  - docs
+  - build-tool
+  - rootfs
+  - etc
+
+pylint:
+  disable:
+    - keyword-arg-before-vararg
+
+pep8:
+  disable:
+    - E131
