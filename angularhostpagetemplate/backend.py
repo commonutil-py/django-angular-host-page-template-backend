@@ -27,7 +27,7 @@ def get_static_url_wrapper():
 	return _simple_static_url_wrapper
 
 
-class AngularHostPageTemplate(BaseEngine, TagMapper):
+class AngularHostPage(BaseEngine, TagMapper):
 	app_dirname = 'angularhostpages'
 
 	def __init__(self, params):
@@ -35,7 +35,7 @@ class AngularHostPageTemplate(BaseEngine, TagMapper):
 		options = params.pop('OPTIONS').copy()
 		if options:
 			raise ImproperlyConfigured("Unknown options: {}".format(", ".join(options)))
-		super(AngularHostPageTemplate, self).__init__(params)
+		super(AngularHostPage, self).__init__(params)
 		self.static_url_wrapper = get_static_url_wrapper()
 
 	def map_base_href(self, path):
