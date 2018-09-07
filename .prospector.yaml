@@ -12,6 +12,7 @@ ignore-paths:
 pylint:
   disable:
     - keyword-arg-before-vararg
+    - too-many-arguments
 
 pep8:
   disable:
