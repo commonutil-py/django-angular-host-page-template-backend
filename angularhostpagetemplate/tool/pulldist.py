@@ -23,6 +23,13 @@ def _prepare_contained_folder(child_path, child_type_title, container_path, cont
 	os.makedirs(child_path)
 
 
+def assemble_source_dest_paths(walk_root, walk_frag, upstream_abspath, dest_abspath):
+	src_abspath = os.path.abspath(os.path.join(walk_root, walk_frag))
+	res_relpath = os.path.relpath(src_abspath, upstream_abspath)
+	dest_abspath = os.path.abspath(os.path.join(dest_abspath, res_relpath))
+	return (src_abspath, res_relpath, dest_abspath)
+
+
 class PullLocation(object):
 	def __init__(self, project_name, template_name, upstream_path, upstream_hostpage_filename, *args, **kwds):
 		super(PullLocation, self).__init__(*args, **kwds)
@@ -47,6 +54,48 @@ class PullLocation(object):
 			aux = cls.parse_config(app_name, idx + 1, cmap)
 			pull_locations.append(aux)
 		return pull_locations
+
+	def make_template_namespaced_abspath(self, template_folder_abspath):
+		p = os.path.join(template_folder_abspath, self.template_name)
+		p = os.path.abspath(p)
+		return p
+
+	def prepare_template_namespaced_folder(self, template_namespaced_abspath, template_folder_abspath):
+		folder_path = os.path.dirname(template_namespaced_abspath)
+		_prepare_contained_folder(folder_path, "namespaced template folder of %s" % (self.project_name, ), template_folder_abspath, "template folder")
+
+	def get_dist_folder(self):
+		for root, dirs, files in os.walk(self.upstream_path):
+			if self.upstream_hostpage_filename in files:
+				return os.path.abspath(root)
+			to_drop = tuple(filter(lambda x: (x[0] != '.'), dirs))
+			for n in to_drop:
+				dirs.remove(n)
+		raise ValueError("cannot reach folder contains host page file: %r (project-name=%r" % (
+				self.upstream_hostpage_filename,
+				self.project_name,
+		))
+
+	def copy_from_upstream(self, static_namespaced_abspath, template_namespaced_abspath, upstream_abspath):
+		seem_dirs = []
+		seem_files = []
+		exp_hostpage_abspath = os.path.abspath(os.path.join(upstream_abspath, self.upstream_hostpage_filename))
+		for root, dirs, files in os.walk(upstream_abspath):
+			for d in dirs:
+				_aux, rel, dest = assemble_source_dest_paths(root, d, upstream_abspath, static_namespaced_abspath)
+				_prepare_contained_folder(dest, "static sub-folder for %s" % (self.project_name, ), static_namespaced_abspath, "static namespaced folder")
+				seem_dirs.append(rel)
+			for f in files:
+				src, rel, dest = assemble_source_dest_paths(root, f, upstream_abspath, static_namespaced_abspath)
+				if src == exp_hostpage_abspath:
+					pass  # TODO: transform template
+				else:
+					pass  # TODO: check and copy file
+
+	def pull_files(self, static_namespaced_abspath, template_folder_abspath):
+		template_namespaced_abspath = self.make_template_namespaced_abspath(template_folder_abspath)
+		self.prepare_template_namespaced_folder(template_namespaced_abspath, template_folder_abspath)
+		upstream_abspath = self.get_dist_folder()
 
 
 class PullDist(object):
