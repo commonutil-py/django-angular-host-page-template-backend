@@ -10,6 +10,19 @@ import logging
 _log = logging.getLogger(__name__)
 
 
+def _prepare_contained_folder(child_path, child_type_title, container_path, container_type_title):
+	if not child_path.startswith(container_path):
+		raise ValueError("%s not resides in %s folder: %r not prefixed with %r" % (
+				child_type_title,
+				container_type_title,
+				child_path,
+				container_path,
+		))
+	if os.path.isdir(child_path):
+		return
+	os.makedirs(child_path)
+
+
 class PullLocation(object):
 	def __init__(self, project_name, template_name, upstream_path, upstream_hostpage_filename, *args, **kwds):
 		super(PullLocation, self).__init__(*args, **kwds)
@@ -84,6 +97,9 @@ class PullDist(object):
 	def app_abspath(self):
 		return os.path.abspath(self.app_path)
 
+	def _prepare_sub_folder(self, sub_folder_path, sub_folder_type_title):
+		_prepare_contained_folder(sub_folder_path, sub_folder_type_title, self.app_abspath, "app")
+
 	@property
 	def static_namespaced_abspath(self):
 		path_frags = [self.app_path, self.static_folder]
@@ -92,12 +108,15 @@ class PullDist(object):
 		return os.path.abspath(os.path.join(*path_frags))
 
 	def prepare_static_namespaced_path(self):
-		p = self.static_namespaced_abspath
-		if not p.startswith(self.app_abspath):
-			raise ValueError("static folder not resides in app folder: %r not prefixed with %r" % (p, self.app_abspath))
-		if os.path.isdir(p):
-			return
-		os.makedirs(p)
+		self._prepare_sub_folder(self.static_namespaced_abspath, "static folder")
+
+	@property
+	def template_abspath(self):
+		path_frags = [self.app_path, self.template_folder]
+		return os.path.abspath(os.path.join(*path_frags))
+
+	def prepare_template_path(self):
+		self._prepare_sub_folder(self.template_abspath, "template folder")
 
 	def pull_files(self):
 		pass  # TODO: impl
