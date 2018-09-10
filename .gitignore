@@ -15,5 +15,6 @@ test/**
 rt-sandbox/**
 .rt-deps/**
 
+dist/**
 django_angular_host_page_template_backend.egg-info/**
 
