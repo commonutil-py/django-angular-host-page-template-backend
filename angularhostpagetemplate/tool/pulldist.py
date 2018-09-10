@@ -125,11 +125,12 @@ class PullLocation(object):
 		for root, dirs, files in os.walk(self.upstream_path):
 			if self.upstream_hostpage_filename in files:
 				return os.path.abspath(root)
-			to_drop = tuple(filter(lambda x: (x[0] != '.'), dirs))
+			to_drop = tuple(filter(lambda x: (x[0] == '.'), dirs))
 			for n in to_drop:
 				dirs.remove(n)
-		raise ValueError("cannot reach folder contains host page file: %r (project-name=%r" % (
+		raise ValueError("cannot reach folder contains host page file: %r at %r(project-name=%r)" % (
 				self.upstream_hostpage_filename,
+				self.upstream_path,
 				self.project_name,
 		))
 
@@ -229,6 +230,9 @@ class PullDist(object):
 		template_folder = cmap.get("template_folder", "angularhostpages")
 		if not app_path:
 			raise ValueError("app_path is required")
+		if app_path[0] != os.sep:
+			app_path = os.path.join(os.path.dirname(os.path.abspath(cfg_path)), app_path)
+			_log.info("application-path: %r", app_path)
 		loc_cmap = cmap.get("pull_from")
 		if loc_cmap:
 			pull_locations = PullLocation.parse_configs(app_name, loc_cmap)
