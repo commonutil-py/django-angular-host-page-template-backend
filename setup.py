@@ -9,6 +9,7 @@ setup(
 		description="Angular Host-page Template Backend and Utility for Django",
 		packages=[
 				"angularhostpagetemplate",
+				"angularhostpagetemplate.tool",
 		])
 
 # vim: ts=4 sw=4 ai nowrap
