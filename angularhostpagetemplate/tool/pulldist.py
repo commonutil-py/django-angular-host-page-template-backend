@@ -244,17 +244,23 @@ class PullDist(object):
 		delete_missing_files = bool(cmap.get("delete_missing_files", True))
 		return cls(app_path, static_folder, static_namespace, template_folder, pull_locations, delete_missing_files)
 
+	def get_pull_location_via_project_name(self, project_name):
+		# type: (str) => PullLocation
+		for pull_loc in self.pull_locations:
+			if pull_loc.project_name == project_name:
+				return pull_loc
+		return None
+
 	def set_upstream_path(self, project_name, dist_path):
 		if not project_name:
-			if len(self.pull_locations) > 1:
+			if len(self.pull_locations) != 1:
 				raise ValueError("there are multiple upstreams, name for pulling from is required.")
-			self.pull_locations[0].upstream_path = dist_path
+			pull_loc = self.pull_locations[0]
 		else:
-			for pull_loc in self.pull_locations:
-				if pull_loc == project_name:
-					pull_loc.upstream_path = dist_path
-					return
-			raise KeyError("cannot found project named %r to pull host page from" % (project_name, ))
+			pull_loc = self.get_pull_location_via_project_name(project_name)
+			if not pull_loc:
+				raise KeyError("cannot found project named %r to pull host page from" % (project_name, ))
+		pull_loc.upstream_path = dist_path
 
 	@property
 	def app_abspath(self):
