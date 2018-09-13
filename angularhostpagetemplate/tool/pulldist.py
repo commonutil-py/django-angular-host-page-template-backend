@@ -73,7 +73,7 @@ def _transform_to_host_page_template(dest_path, src_path, static_namespace):
 def _copy_nonsync_file(dest, src):
 	is_need, reason_type, dest_factor, src_factor = _check_file_overwrite_need(dest, src)
 	if is_need:
-		_log.info("copy file from upstream: %s => %s (%s: src=%r, dest=%r)", src, dest, reason_type, src_factor, dest_factor)
+		_log.info("copy file from upstream: %s => %s (%s; src: %r, dest: %r)", src, dest, reason_type, src_factor, dest_factor)
 		shutil.copyfile(src, dest)
 	else:
 		_log.info("file in upstream availabled in destination: %s == %s", src, dest)
