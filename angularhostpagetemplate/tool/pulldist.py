@@ -347,6 +347,7 @@ class PullDist(object):
 			skip_relpaths.update(skipped_relpaths)
 		if self.remove_missing_file_entries:
 			self.remove_missing_file_entries(seem_dirs, seem_files, skip_relpaths)
+		_log.info("SUCCESS: pull operation completed.")
 
 
 _HELP_MESSAGE = """
