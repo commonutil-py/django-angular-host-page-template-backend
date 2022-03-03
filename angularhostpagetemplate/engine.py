@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import annotations
 
+from typing import Iterable, Tuple
 import re
 
 TRAP_BASEHREF = re.compile(r'<base\s+href\s*=\s*"([^"]*)"\s*/?\s*>', re.IGNORECASE)
 
 
-class TagMapper(object):
+class TagMapper:
 	def impl_map_tag(self, tag_type, *args, **kwds):
 		callable_name = "map_" + tag_type
 		f = getattr(self, callable_name, None)
@@ -15,8 +16,7 @@ class TagMapper(object):
 		return None
 
 
-def map_base_href(template_text, tag_mapper):
-	# type: (str, TagMapper) => Iterable[tuple[bool, str]]
+def map_base_href(template_text: str, tag_mapper: TagMapper) -> Iterable[Tuple[bool, str]]:
 	aux = TRAP_BASEHREF.split(template_text)
 	if not aux:
 		return
@@ -38,7 +38,6 @@ def apply_map_callables(template_text, tag_mapper, callable_1, *remain_callables
 			yield inner_txt
 
 
-def replace_tags(template_text, tag_mapper):
-	# type: (str, TagMapper) => str
-	fragments = [t for t in apply_map_callables(template_text, tag_mapper, map_base_href)]
+def replace_tags(template_text: str, tag_mapper: TagMapper) -> str:
+	fragments = list(apply_map_callables(template_text, tag_mapper, map_base_href))
 	return ''.join(fragments)

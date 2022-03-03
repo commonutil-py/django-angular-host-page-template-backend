@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import annotations
 
+from typing import List, Set, Tuple
 import os
 import sys
 import getopt
@@ -16,12 +17,7 @@ _log = logging.getLogger(__name__)
 
 def _prepare_contained_folder(child_path, child_type_title, container_path, container_type_title):
 	if not child_path.startswith(container_path):
-		raise ValueError("%s not resides in %s folder: %r not prefixed with %r" % (
-				child_type_title,
-				container_type_title,
-				child_path,
-				container_path,
-		))
+		raise ValueError(f"{child_type_title} not resides in {container_type_title} folder: {child_path!r} not prefixed with {container_path!r}")
 	if os.path.isdir(child_path):
 		return
 	os.makedirs(child_path)
@@ -54,7 +50,7 @@ def _check_file_overwrite_need(dest_path, src_path):
 
 class AngularHostPageTagMapper(TagMapper):
 	def __init__(self, static_namespace, *args, **kwds):
-		super(AngularHostPageTagMapper, self).__init__(*args, **kwds)
+		super().__init__(*args, **kwds)
 		self.static_namespace = static_namespace.strip("/") + "/"
 
 	def map_base_href(self, path):  # pylint: disable=unused-argument
@@ -63,10 +59,10 @@ class AngularHostPageTagMapper(TagMapper):
 
 def _transform_to_host_page_template(dest_path, src_path, static_namespace):
 	tag_mapper = AngularHostPageTagMapper(static_namespace)
-	with open(src_path, "r") as fp:
+	with open(src_path, "r", encoding='utf-8') as fp:
 		template_text = fp.read()
 	result_code = replace_tags(template_text, tag_mapper)
-	with open(dest_path, "w") as fp:
+	with open(dest_path, "w", encoding='utf-8') as fp:
 		fp.write(result_code)
 
 
@@ -79,9 +75,9 @@ def _copy_nonsync_file(dest, src):
 		_log.info("file in upstream availabled in destination: %s == %s", src, dest)
 
 
-class PullLocation(object):
+class PullLocation:
 	def __init__(self, project_name, template_name, upstream_path, upstream_hostpage_filename, skip_paths, *args, **kwds):
-		super(PullLocation, self).__init__(*args, **kwds)
+		super().__init__(*args, **kwds)
 		self.project_name = project_name
 		self.template_name = template_name
 		self.upstream_path = upstream_path
@@ -128,11 +124,8 @@ class PullLocation(object):
 			to_drop = tuple(filter(lambda x: (x[0] == '.'), dirs))
 			for n in to_drop:
 				dirs.remove(n)
-		raise ValueError("cannot reach folder contains host page file: %r at %r(project-name=%r)" % (
-				self.upstream_hostpage_filename,
-				self.upstream_path,
-				self.project_name,
-		))
+		raise ValueError(("cannot reach folder contains host page file: "
+							f"{self.upstream_hostpage_filename!r} at {self.upstream_path!r}(project-name={self.project_name!r})"))
 
 	def build_skip_relpaths_set(self, upstream_abspath):
 		if not self.skip_paths:
@@ -144,14 +137,13 @@ class PullLocation(object):
 			result.add(relp)
 		return frozenset(result)
 
-	def build_operation_callable(self, static_namespace, static_namespaced_abspath, template_folder_abspath):
-		# type: (str, str, str) => PullOperation
+	def build_operation_callable(self, static_namespace: str, static_namespaced_abspath: str, template_folder_abspath: str) -> PullOperation:
 		return PullOperation(static_namespace, static_namespaced_abspath, template_folder_abspath, *self.param_tuple)
 
 
 class PullOperation(PullLocation):
 	def __init__(self, static_namespace, static_namespaced_abspath, template_folder_abspath, *args, **kwds):
-		super(PullOperation, self).__init__(*args, **kwds)
+		super().__init__(*args, **kwds)
 		self.static_namespace = static_namespace
 		self.static_namespaced_abspath = static_namespaced_abspath
 		self.template_folder_abspath = template_folder_abspath
@@ -162,7 +154,7 @@ class PullOperation(PullLocation):
 
 	def prepare_template_namespaced_folder(self):
 		folder_path = os.path.dirname(self.template_namespaced_abspath)
-		_prepare_contained_folder(folder_path, "namespaced template folder of %s" % (self.project_name, ), self.template_folder_abspath, "template folder")
+		_prepare_contained_folder(folder_path, f"namespaced template folder of {self.project_name}", self.template_folder_abspath, "template folder")
 
 	def assemble_static_namespaced_paths(self, walk_root, walk_frag):
 		src_abspath = os.path.abspath(os.path.join(walk_root, walk_frag))
@@ -177,7 +169,7 @@ class PullOperation(PullLocation):
 			if rel in self.skip_relpaths:
 				to_drop.append(rel)
 				continue
-			_prepare_contained_folder(dest, "static sub-folder for %s" % (self.project_name, ), self.static_namespaced_abspath, "static namespaced folder")
+			_prepare_contained_folder(dest, f"static sub-folder for {self.project_name}", self.static_namespaced_abspath, "static namespaced folder")
 			yield rel
 		for d in to_drop:
 			dirs.remove(d)
@@ -201,16 +193,15 @@ class PullOperation(PullLocation):
 			seem_files.extend(self._copy_walking_upstream_files(root, files))
 		return (seem_dirs, seem_files)
 
-	def __call__(self):
-		# type: (bool) => Tuple[List[str], List[str], Set[str]]
+	def __call__(self) -> Tuple[List[str], List[str], Set[str]]:
 		self.prepare_template_namespaced_folder()
 		seem_dirs, seem_files = self.copy_from_upstream()
 		return (seem_dirs, seem_files, self.skip_relpaths)
 
 
-class PullDist(object):
+class PullDist:
 	def __init__(self, app_path, static_folder, static_namespace, template_folder, pull_locations, delete_missing_files, *args, **kwds):
-		super(PullDist, self).__init__(*args, **kwds)
+		super().__init__(*args, **kwds)
 		self.app_path = app_path
 		self.static_folder = static_folder
 		self.static_namespace = static_namespace
@@ -221,7 +212,7 @@ class PullDist(object):
 
 	@classmethod
 	def build_via_config(cls, cfg_path):
-		with open(cfg_path, "r") as fp:
+		with open(cfg_path, "r", encoding='utf-8') as fp:
 			cmap = json_load(fp)
 		app_path = cmap.get("app_path", None)
 		app_name = os.path.basename(app_path.rstrip(os.sep)) if app_path else None
@@ -244,8 +235,7 @@ class PullDist(object):
 		delete_missing_files = bool(cmap.get("delete_missing_files", True))
 		return cls(app_path, static_folder, static_namespace, template_folder, pull_locations, delete_missing_files)
 
-	def get_pull_location_via_project_name(self, project_name):
-		# type: (str) => PullLocation
+	def get_pull_location_via_project_name(self, project_name: str) -> PullLocation:
 		for pull_loc in self.pull_locations:
 			if pull_loc.project_name == project_name:
 				return pull_loc
@@ -259,7 +249,7 @@ class PullDist(object):
 		else:
 			pull_loc = self.get_pull_location_via_project_name(project_name)
 			if not pull_loc:
-				raise KeyError("cannot found project named %r to pull host page from" % (project_name, ))
+				raise KeyError(f"cannot found project named {project_name!r} to pull host page from")
 		pull_loc.upstream_path = dist_path
 
 	@property
@@ -345,7 +335,7 @@ class PullDist(object):
 			seem_dirs.update(saw_dirs)
 			seem_files.update(saw_files)
 			skip_relpaths.update(skipped_relpaths)
-		if self.remove_missing_file_entries:
+		if self.delete_missing_files:
 			self.remove_missing_file_entries(seem_dirs, seem_files, skip_relpaths)
 		_log.info("SUCCESS: pull operation completed.")
 
@@ -366,16 +356,14 @@ def parse_option(argv):
 	cfg_path = ".angular-host-page-pull.json"
 	try:
 		opts, args = getopt.getopt(argv, "hC:", ["help", "conf="])
-	except getopt.GetoptError:
+	except getopt.GetoptError as e:
 		_log.exception("failed on parsing command line options")
-		sys.exit(2)
-		return None
+		raise SystemExit(2) from e
 	for opt, arg in opts:
 		if opt in ("-h", "--help"):
-			print _HELP_MESSAGE
-			sys.exit()
-			return None
-		elif opt in ("-C", "--conf"):
+			print(_HELP_MESSAGE)
+			raise SystemExit
+		if opt in ("-C", "--conf"):
 			cfg_path = arg
 	pull_instance = PullDist.build_via_config(os.path.abspath(cfg_path))
 	for arg in args:
