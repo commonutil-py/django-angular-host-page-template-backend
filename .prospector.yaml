@@ -1,6 +1,6 @@
 autodetect: false
-uses:
-  - django
+# uses:
+#   - django
 
 ignore-paths:
   - dist
