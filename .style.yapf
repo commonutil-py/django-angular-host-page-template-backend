@@ -1,7 +1,7 @@
 [style]
 # https://github.com/google/yapf/blob/master/yapf/yapflib/style.py
 
-based_on_style = chromium
+based_on_style = yapf
 
 # Insert a blank line before a 'def' or 'class' immediately nested
 # within another 'def' or 'class'. For example:

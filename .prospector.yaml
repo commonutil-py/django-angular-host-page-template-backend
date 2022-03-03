@@ -13,6 +13,8 @@ pylint:
   disable:
     - keyword-arg-before-vararg
     - too-many-arguments
+  options:
+    indent-string: "\t"
 
 pep8:
   disable:
