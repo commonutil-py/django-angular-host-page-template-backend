@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import io
-import errno
 from urllib.parse import quote, urljoin
 
 from django.apps import apps
@@ -47,17 +45,15 @@ class AngularHostPage(BaseEngine, TagMapper):
 		tried = []
 		for template_file in self.iter_template_filenames(template_name):
 			try:
-				with io.open(template_file, encoding=settings.FILE_CHARSET) as fp:
+				with open(template_file, encoding='utf-8') as fp:
 					template_code = fp.read()
-			except IOError as e:
-				if e.errno == errno.ENOENT:
-					tried.append((
-							Origin(template_file, template_name, self),
-							'Host page file not exist',
-					))
-					continue
-				raise
-			return Template(template_code, self)
+			except FileNotFoundError:
+				tried.append((
+						Origin(template_file, template_name, self),
+						'Host page file not exist',
+				))
+			else:
+				return Template(template_code, self)
 		raise TemplateDoesNotExist(template_name, tried=tried, backend=self)
 
 
